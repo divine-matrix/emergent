@@ -4,7 +4,43 @@
 #include "SDL3/SDL_render.h"
 #include "SDL3/SDL_video.h"
 #include "base.h"
+#include "imgui.h"
+#include "imgui_impl_sdl3.h"
+#include "imgui_impl_sdlrenderer3.h"
 #include <iostream>
+
+void StyleColorsGrayscale() {
+  ImGuiStyle &style = ImGui::GetStyle();
+  ImVec4 *colors = style.Colors;
+
+  colors[ImGuiCol_WindowBg] = ImVec4(0.12f, 0.12f, 0.12f, 1.00f);
+  colors[ImGuiCol_ChildBg] = ImVec4(0.12f, 0.12f, 0.12f, 1.00f);
+  colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
+  colors[ImGuiCol_Border] = ImVec4(0.30f, 0.30f, 0.30f, 0.50f);
+  colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+
+  colors[ImGuiCol_Text] = ImVec4(0.85f, 0.85f, 0.85f, 1.00f);
+  colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+
+  colors[ImGuiCol_Header] = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
+  colors[ImGuiCol_HeaderHovered] = ImVec4(0.35f, 0.35f, 0.35f, 1.00f);
+  colors[ImGuiCol_HeaderActive] = ImVec4(0.45f, 0.45f, 0.45f, 1.00f);
+
+  colors[ImGuiCol_Button] = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
+  colors[ImGuiCol_ButtonHovered] = ImVec4(0.32f, 0.32f, 0.32f, 1.00f);
+  colors[ImGuiCol_ButtonActive] = ImVec4(0.42f, 0.42f, 0.42f, 1.00f);
+
+  colors[ImGuiCol_FrameBg] = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
+  colors[ImGuiCol_FrameBgHovered] = ImVec4(0.28f, 0.28f, 0.28f, 1.00f);
+  colors[ImGuiCol_FrameBgActive] = ImVec4(0.35f, 0.35f, 0.35f, 1.00f);
+
+  colors[ImGuiCol_SliderGrab] = ImVec4(0.55f, 0.55f, 0.55f, 1.00f);
+  colors[ImGuiCol_SliderGrabActive] = ImVec4(0.75f, 0.75f, 0.75f, 1.00f);
+  colors[ImGuiCol_CheckMark] = ImVec4(0.85f, 0.85f, 0.85f, 1.00f);
+
+  style.WindowRounding = 3.0f;
+  style.FrameRounding = 2.0f;
+}
 
 bool Engine::renderInit(const char *title, int width, int height) {
   this->width = width;
@@ -19,12 +55,30 @@ bool Engine::renderInit(const char *title, int width, int height) {
     return false;
   }
 
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO &io = ImGui::GetIO();
+  (void)io;
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+  StyleColorsGrayscale();
+
+  // Initialize SDL3 and SDLRenderer3 backends
+  ImGui_ImplSDL3_InitForSDLRenderer(m_window, m_renderer);
+  ImGui_ImplSDLRenderer3_Init(m_renderer);
+
   return true;
 }
 
 void Engine::cleanup() {
-  SDL_DestroyRenderer(m_renderer);
-  SDL_DestroyWindow(m_window);
+  ImGui_ImplSDLRenderer3_Shutdown();
+  ImGui_ImplSDL3_Shutdown();
+  ImGui::DestroyContext();
+
+  if (m_renderer)
+    SDL_DestroyRenderer(m_renderer);
+  if (m_window)
+    SDL_DestroyWindow(m_window);
 }
 
 bool Engine::_handle_event(App *app) {
@@ -42,51 +96,67 @@ void Engine::draw() {
   for (RenderObject *obj : ctx.drawCalls) {
     obj->draw();
   }
-  SDL_RenderPresent(m_renderer);
 }
 
 bool Engine::renderFrame(App *app) {
   if (!_handle_event(app)) {
     return false;
   }
-  app->update();
   draw();
+
+  ImGui_ImplSDLRenderer3_NewFrame();
+  ImGui_ImplSDL3_NewFrame();
+  ImGui::NewFrame();
+
   app->drawUI();
+
+  ImGui::Render();
+  ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_renderer);
+  SDL_RenderPresent(m_renderer);
   return true;
 }
 
 bool App::run() {
   if (!engine.renderInit("Emergent Garden", 800, 600)) {
-    std::cout << "An error occurred in the initialization of the engine."
-              << std::endl;
-    SDL_Quit();
-    return true;
+    return false;
   }
-
   ctx.g_renderer = &engine;
-
   init();
 
-  while (true) {
-    Uint64 frame_start_time = SDL_GetTicks();
+  Uint64 last_time = SDL_GetTicks();
+  double accumulator = 0.0;
+  const double target_step = 1.0 / 60.0;
 
-    if (!engine.renderFrame(this)) {
-      break;
+  bool is_running = true;
+  while (is_running) {
+    Uint64 current_time = SDL_GetTicks();
+    double frame_time = (current_time - last_time) / 1000.0;
+    last_time = current_time;
+
+    // Prevent spiral of death if a frame lags
+    if (frame_time > 0.25)
+      frame_time = 0.25;
+
+    accumulator += frame_time;
+
+    // 1. Catch up on fixed-rate simulation steps
+    while (accumulator >= target_step) {
+      // If event handling needs to happen per tick, call it here or keep it in
+      // renderFrame
+      update();
+      accumulator -= target_step;
     }
-    // VSync to 60fps
-    Uint64 frame_duration_ms = SDL_GetTicks() - frame_start_time;
 
-    // 4. If the frame finished early, delay until the target time is hit
-    if (frame_duration_ms < FRAME_TARGET_MS) {
-      SDL_Delay(FRAME_TARGET_MS - frame_duration_ms);
+    // 2. Render exactly once per physical frame
+    if (!engine.renderFrame(this)) {
+      is_running = false;
+      break;
     }
   }
 
   engine.cleanup();
-  SDL_Quit();
   return true;
 }
-
 SDL_Texture *Engine::createTexture(int w, int h, SDL_TextureAccess accessMode) {
   return SDL_CreateTexture(m_renderer, ctx.pixelFormat, accessMode, w, h);
 }

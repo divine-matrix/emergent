@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find SDL3 globally
 find_package(SDL3 REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 # Point straight to the main source directory
 add_subdirectory(src)
