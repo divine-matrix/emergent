@@ -16,7 +16,11 @@ public:
   void cleanup();
   bool renderFrame(App *app);
 
+  // Texture access helper functions
+
   SDL_Texture *createTexture(int w, int h, SDL_TextureAccess accessMode);
+  void updateTexture(SDL_Texture *tex, void *pixels, int w);
+  void renderTexture(SDL_Texture *tex, TextureRegion region);
 
 private:
   GlobalContext &ctx;

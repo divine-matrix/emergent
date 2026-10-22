@@ -9,4 +9,3 @@ find_package(SDL3 REQUIRED)
 
 # Point straight to the main source directory
 add_subdirectory(src)
-

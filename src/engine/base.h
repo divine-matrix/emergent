@@ -1,4 +1,5 @@
 #pragma once
+#include "SDL3/SDL_pixels.h"
 #include "SDL3/SDL_render.h"
 #include <cstdint>
 #include <vector>
@@ -37,6 +38,23 @@ public:
   float rotation;
 };
 
+struct TextureRegion {
+  Transform pos;
+  Vector2I base;
+  Vector2I targetPosition;
+  Vector2I target;
+  bool targetUsed;
+  bool destUsed;
+};
+
+class Color {
+public:
+  Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+  uint8_t r, g, b, a;
+  // returns color in abgr32 format
+  uint32_t getRawColor();
+};
+
 class Object {
 public:
   Object(GlobalContext &context) : ctx(context) {};
@@ -52,6 +70,7 @@ private:
 class RenderObject : public Object {
 public:
   RenderObject(GlobalContext &context);
+  ~RenderObject();
   virtual bool draw();
 };
 
@@ -59,8 +78,9 @@ class ProceduralTextureRender : public RenderObject {
 public:
   Transform transform;
   uint16_t width, height;
-  uint32_t *m_tex = new uint32_t[width * height];
+  uint32_t *m_tex;
   SDL_Texture *texture;
+  TextureRegion region;
 
   ProceduralTextureRender(GlobalContext &context, uint16_t width,
                           uint16_t height);
@@ -72,8 +92,8 @@ public:
 class GlobalContext {
 public:
   Engine *g_renderer;
-  std::vector<RenderObject> drawCalls;
+  std::vector<RenderObject *> drawCalls;
   uint32_t currentID = 0;
-  SDL_PixelFormat pixelFormat = SDL_PIXELFORMAT_RGBA8888;
+  SDL_PixelFormat pixelFormat = SDL_PIXELFORMAT_RGBA32;
   void set_renderer(Engine *ren) { g_renderer = ren; }
 };
