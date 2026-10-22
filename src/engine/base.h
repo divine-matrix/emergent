@@ -1,6 +1,25 @@
 #pragma once
+#include "SDL3/SDL_render.h"
 #include <cstdint>
 #include <vector>
+
+// TYPE DEFINITIONS
+
+struct Vector2 {
+  float x;
+  float y;
+
+  Vector2() : x(0.0f), y(0.0f) {};
+  Vector2(float ax, float ay) : x(ax), y(ay) {};
+};
+
+struct Vector2I {
+  int x;
+  int y;
+
+  Vector2I() : x(0), y(0) {};
+  Vector2I(int ax, int ay) : x(ax), y(ay) {};
+};
 
 // 1. Forward-declare Renderer so GlobalContext knows it's a class
 class Engine;
@@ -9,6 +28,14 @@ class Engine;
 // RenderObject
 class GlobalContext; // Forward declaration if needed, or place GlobalContext
                      // below
+
+class Transform {
+public:
+  Vector2I position;
+  Vector2I scale;
+  // deprecated
+  float rotation;
+};
 
 class Object {
 public:
@@ -28,11 +55,25 @@ public:
   virtual bool draw();
 };
 
+class ProceduralTextureRender : public RenderObject {
+public:
+  Transform transform;
+  uint16_t width, height;
+  uint32_t *m_tex = new uint32_t[width * height];
+  SDL_Texture *texture;
+
+  ProceduralTextureRender(GlobalContext &context, uint16_t width,
+                          uint16_t height);
+  ~ProceduralTextureRender();
+
+  bool draw() override;
+};
 // 3. Now GlobalContext can safely use RenderObject and Renderer*
 class GlobalContext {
 public:
   Engine *g_renderer;
   std::vector<RenderObject> drawCalls;
   uint32_t currentID = 0;
+  SDL_PixelFormat pixelFormat = SDL_PIXELFORMAT_RGBA8888;
   void set_renderer(Engine *ren) { g_renderer = ren; }
 };

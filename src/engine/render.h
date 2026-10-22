@@ -1,4 +1,5 @@
 #pragma once
+#include "SDL3/SDL_render.h"
 #include "base.h"
 #include <SDL3/SDL.h>
 #include <cstdint>
@@ -14,6 +15,8 @@ public:
   void draw();
   void cleanup();
   bool renderFrame(App *app);
+
+  SDL_Texture *createTexture(int w, int h, SDL_TextureAccess accessMode);
 
 private:
   GlobalContext &ctx;

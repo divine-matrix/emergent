@@ -85,3 +85,7 @@ bool App::run() {
   SDL_Quit();
   return true;
 }
+
+SDL_Texture *Engine::createTexture(int w, int h, SDL_TextureAccess accessMode) {
+  return SDL_CreateTexture(m_renderer, ctx.pixelFormat, accessMode, w, h);
+}
