@@ -36,6 +36,7 @@ public:
   int TARGET_FPS = 60;
   uint64_t FRAME_TARGET_MS =
       1000 / TARGET_FPS; // ~16.666 milliseconds per frame
+  bool paused = false;
 
   bool run();
   virtual ~App() {};

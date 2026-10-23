@@ -85,7 +85,16 @@ bool Engine::_handle_event(App *app) {
   bool running = true;
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
-    app->on_event(event, &running);
+    ImGui_ImplSDL3_ProcessEvent(&event);
+    switch (event.type) {
+    case SDL_EVENT_QUIT:
+      running = false;
+    case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+      running = false;
+      break;
+    default:
+      app->on_event(event, &running);
+    }
   }
   return running;
 }
@@ -137,16 +146,17 @@ bool App::run() {
     if (frame_time > 0.25)
       frame_time = 0.25;
 
-    accumulator += frame_time;
+    if (!paused) {
+      accumulator += frame_time;
 
-    // 1. Catch up on fixed-rate simulation steps
-    while (accumulator >= target_step) {
-      // If event handling needs to happen per tick, call it here or keep it in
-      // renderFrame
-      update();
-      accumulator -= target_step;
+      // 1. Catch up on fixed-rate simulation steps
+      while (accumulator >= target_step) {
+        // If event handling needs to happen per tick, call it here or keep it
+        // in renderFrame
+        update();
+        accumulator -= target_step;
+      }
     }
-
     // 2. Render exactly once per physical frame
     if (!engine.renderFrame(this)) {
       is_running = false;

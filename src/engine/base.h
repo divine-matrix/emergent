@@ -20,6 +20,7 @@ struct Vector2I {
 
   Vector2I() : x(0), y(0) {};
   Vector2I(int ax, int ay) : x(ax), y(ay) {};
+  int getAsInt(int width) const;
 };
 
 // 1. Forward-declare Renderer so GlobalContext knows it's a class

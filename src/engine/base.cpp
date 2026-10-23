@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <sys/types.h>
 
+int Vector2I::getAsInt(int width) const { return y * width + x; }
+
 uint32_t Color::getRawColor() {
   // Use left-shifts (<<) to place each channel into its correct byte position
   return ((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)g << 8) |
