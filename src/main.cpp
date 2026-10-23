@@ -6,6 +6,7 @@
 #include <SDL3/SDL_mouse.h>
 #include <memory>
 
+#include "brain.h"
 #include "langton.h"
 // #include "gameoflife.h"   // future simulations go here
 
@@ -20,7 +21,7 @@ struct SimEntry {
 };
 
 static const SimEntry kSims[] = {
-    {"Langton's Ant", make<LangtonSimulation>},
+    {"Langton's Ant", make<LangtonSimulation>}, {"Brian's Brain", make<Brain>}
     // {"Game of Life", make<GameOfLifeSimulation>},
 };
 static constexpr int kSimCount = sizeof(kSims) / sizeof(kSims[0]);
