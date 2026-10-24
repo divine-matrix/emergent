@@ -1,11 +1,58 @@
 # Cellular Automata Simulation
 ## Installation
-Requirements:
- - vcpkg
- - CMake
- - a C++ compiler
 
-To install: [Instructions will be added in a future commit]
+### Prerequisites
+
+* **C++ Compiler** (supporting C++17 or later, e.g., `gcc`, `clang`, or MSVC)
+* **CMake** (version 3.15 or higher)
+* **Git**
+
+---
+
+### Step 1: Clone the Repository
+
+Clone the project repository along with any submodules:
+
+```bash
+git clone --recursive https://github.com/divine-matrix/emergent.git
+cd emergent
+```
+
+*(If you already cloned without `--recursive`, run `git submodule update --init --recursive` inside the root folder).*
+
+---
+
+### Step 2: Build the Project
+
+Use modern CMake commands to configure and compile the build:
+
+```bash
+# Configure build files into the 'build' directory
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+# Build using all available CPU cores
+cmake --build build -j
+```
+
+---
+
+### Step 3: Install
+
+Install the compiled binaries, headers, and libraries to your system:
+
+```bash
+cmake --build build --target install
+```
+
+> **Note:**
+> * If installing system-wide (e.g., to `/usr/local` on Linux/macOS), you may need administrative privileges:
+>   ```bash
+>   sudo cmake --build build --target install
+>   ```
+> * To install to a custom path, add `-DCMAKE_INSTALL_PREFIX=/path/to/install` to Step 2:
+>   ```bash
+>   cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/.local
+>   ```
 
 ## Information
 
