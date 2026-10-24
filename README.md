@@ -1,6 +1,8 @@
 # Cellular Automata Simulation
 ## Installation
 
+**Instructions for Windows are coming soon.**
+
 ### Prerequisites
 
 * **C++ Compiler** (supporting C++17 or later, e.g., `gcc`, `clang`, or MSVC)
